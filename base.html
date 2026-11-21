@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TaskFlow{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark">✓</span><span>Task<span class="brand-light">Flow</span></span>
+    </a>
+    <div class="menu-label">WORKSPACE</div>
+    <nav class="nav-menu">
+      <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('index') }}"><span class="nav-icon">▦</span>Dashboard</a>
+      <a class="nav-link {% if active_page == 'add' %}active{% endif %}" href="{{ url_for('add_task') }}"><span class="nav-icon">＋</span>Add New Task</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="help-card"><div class="help-icon">✦</div><strong>Stay on track</strong><p>Small steps every day lead to big results.</p></div>
+      <div class="profile"><div class="avatar">TF</div><div><strong>TaskFlow User</strong><small>Personal workspace</small></div></div>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div><div class="top-eyebrow">YOUR WORKSPACE</div><h1>{% block page_heading %}Dashboard{% endblock %}</h1></div>
+      <a class="top-add" href="{{ url_for('add_task') }}">＋ <span>New Task</span></a>
+    </header>
+    <section class="page-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+</body>
+</html>

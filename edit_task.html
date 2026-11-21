@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Edit Task | TaskFlow{% endblock %}
+{% block page_heading %}Edit Task{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <div class="form-intro"><div class="form-icon">✦</div><h2>Edit Task</h2><p>Fill in the details below to keep your work organized.</p></div>
+  <form method="POST" class="task-form">
+    <label>Task title <span>*</span><input name="title" required maxlength="150" value="{{ task.title if task else '' }}" placeholder="e.g. Complete assignment"></label>
+    <label>Description<textarea name="description" rows="4" placeholder="Add some details about this task...">{{ task.description if task else '' }}</textarea></label>
+    <div class="form-two">
+      <label>Due date<input type="date" name="due_date" value="{{ task.due_date if task else '' }}"></label>
+      <label>Reminder date & time<input type="datetime-local" name="reminder_date" value="{{ task.reminder_date if task and task.reminder_date else '' }}"></label>
+    </div>
+    <div class="form-two">
+      <label>Priority<select name="priority">{% for p in ['Low','Medium','High'] %}<option value="{{ p }}" {% if task and task.priority==p %}selected{% elif not task and p=='Medium' %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></label>
+      <label>Category<select name="category">{% for c in ['Study','Personal','Work','Projects','Other'] %}<option value="{{ c }}" {% if task and task.category==c %}selected{% elif not task and c=='Other' %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+    </div>
+    <div class="form-actions"><a class="cancel-btn" href="{{ url_for('index') }}">Cancel</a><button class="primary-btn" type="submit">Save Changes</button></div>
+  </form>
+</div>
+{% endblock %}

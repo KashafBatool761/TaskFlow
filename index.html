@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | TaskFlow{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+{% block content %}
+<div class="welcome-row">
+  <div><h2>Welcome back! <span class="wave">✦</span></h2><p>Here’s an overview of your tasks and progress.</p></div>
+  <div class="date-chip">◷ &nbsp; {{ now.strftime('%A, %d %B') if now is defined else '' }}</div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue"><div class="stat-top"><span class="stat-icon">▦</span><span class="stat-caption">ALL TASKS</span></div><div class="stat-number">{{ total }}</div><div class="stat-foot">Total tasks created</div></div>
+  <div class="stat-card stat-orange"><div class="stat-top"><span class="stat-icon">◷</span><span class="stat-caption">PENDING</span></div><div class="stat-number">{{ pending }}</div><div class="stat-foot">Tasks waiting for you</div></div>
+  <div class="stat-card stat-green"><div class="stat-top"><span class="stat-icon">✓</span><span class="stat-caption">COMPLETED</span></div><div class="stat-number">{{ completed }}</div><div class="stat-foot">Tasks completed</div></div>
+  <div class="stat-card stat-purple"><div class="stat-top"><span class="stat-icon">↗</span><span class="stat-caption">PRODUCTIVITY</span></div><div class="stat-number">{{ productivity }}<small>%</small></div><div class="stat-foot">Overall completion rate</div></div>
+</div>
+
+<div class="dashboard-grid">
+  <section class="panel tasks-panel">
+    <div class="panel-heading"><div><h3>My Tasks</h3><p>Keep your day organized and focused.</p></div><a class="outline-btn" href="{{ url_for('add_task') }}">＋ Add Task</a></div>
+    <form class="filter-bar" method="GET" action="{{ url_for('index') }}">
+      <div class="search-wrap"><span>⌕</span><input type="text" name="search" value="{{ search }}" placeholder="Search tasks..."></div>
+      <select name="status"><option value="all" {% if status=='all' %}selected{% endif %}>All status</option><option value="pending" {% if status=='pending' %}selected{% endif %}>Pending</option><option value="completed" {% if status=='completed' %}selected{% endif %}>Completed</option></select>
+      <select name="priority"><option value="all">All priorities</option>{% for p in ['High','Medium','Low'] %}<option value="{{ p }}" {% if priority==p %}selected{% endif %}>{{ p }} priority</option>{% endfor %}</select>
+      <select name="category"><option value="all">All categories</option>{% for c in ['Study','Personal','Work','Projects','Other'] %}<option value="{{ c }}" {% if category==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+      <button class="filter-btn" type="submit">Filter</button>
+    </form>
+
+    {% if tasks %}
+      <div class="task-list">
+      {% for task in tasks %}
+        <article class="task-row {% if task.completed %}is-complete{% endif %}">
+          <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}"><button class="check-btn {% if task.completed %}checked{% endif %}" title="Mark complete" aria-label="Toggle complete">{% if task.completed %}✓{% endif %}</button></form>
+          <div class="task-main"><div class="task-title-line"><h4>{{ task.title }}</h4><span class="priority priority-{{ task.priority|lower }}">{{ task.priority }}</span></div>
+            {% if task.description %}<p>{{ task.description }}</p>{% endif %}
+            <div class="task-meta"><span>▣ {{ task.category }}</span>{% if task.due_date %}<span>◷ Due {{ task.due_date }}</span>{% endif %}{% if task.reminder_date %}<span>♧ Reminder set</span>{% endif %}</div>
+          </div>
+          <div class="task-actions"><a href="{{ url_for('edit_task', task_id=task.id) }}" title="Edit">✎</a><form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Delete this task?')"><button title="Delete">⌫</button></form></div>
+        </article>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state"><div class="empty-icon">✦</div><h3>No tasks found</h3><p>Add a task or change your filters to see your work here.</p><a class="primary-btn" href="{{ url_for('add_task') }}">Create your first task</a></div>
+    {% endif %}
+  </section>
+
+  <aside class="right-column">
+    <section class="panel progress-panel"><div class="panel-heading compact"><div><h3>Weekly Productivity</h3><p>Your completed tasks this week</p></div></div><div class="chart-wrap"><canvas id="weeklyChart"></canvas></div><div class="weekly-total"><span>Completed this week</span><strong>{{ weekly_values|sum }}</strong></div></section>
+    <section class="panel focus-panel"><div class="focus-heading"><span class="focus-star">✦</span><div><h3>Daily focus</h3><p>A little progress is still progress.</p></div></div><div class="focus-stat"><div><span>Due today</span><strong>{{ due_today }}</strong></div><div><span>Overdue</span><strong class="overdue-number">{{ overdue }}</strong></div></div></section>
+  </aside>
+</div>
+
+<div id="weekly-data" data-labels='{{ weekly_labels|tojson|forceescape }}' data-values='{{ weekly_values|tojson|forceescape }}' hidden></div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const holder = document.getElementById("weekly-data");
+  const canvas = document.getElementById("weeklyChart");
+  if (!holder || !canvas || typeof Chart === "undefined") return;
+  const labels = JSON.parse(holder.dataset.labels || "[]");
+  const values = JSON.parse(holder.dataset.values || "[]");
+  new Chart(canvas, {
+    type: "bar",
+    data: { labels, datasets: [{ data: values, backgroundColor: "#7567e8", hoverBackgroundColor: "#5b4ed0", borderRadius: 7, borderSkipped: false, maxBarThickness: 28 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { displayColors: false, backgroundColor: "#202945", padding: 11, callbacks: { label: (ctx) => " " + ctx.raw + " completed" } } },
+      scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: "#929bb0", font: { family: "DM Sans", size: 11 } } }, y: { beginAtZero: true, ticks: { precision: 0, stepSize: 1, color: "#a0a8b8", font: { family: "DM Sans", size: 10 } }, grid: { color: "#eef0f6", drawTicks: false }, border: { display: false } } } }
+  });
+});
+</script>
+{% endblock %}
